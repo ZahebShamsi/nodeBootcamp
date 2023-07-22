@@ -6,12 +6,12 @@ process.env.UV_THREADPOOL_SIZE = 4;
 //#region 1 - Event Loop
 
     // => code start 
-        // setImmediate(() => console.log("setImmediate 1"));
-        // setTimeout(() => console.log("setTimeout 1"), 0);
-        // fs.readFile('./test-file.txt', ()=>{
-        //     console.log('I/O finished')
-        // })
-        // console.log("console top-level code");
+        setImmediate(() => console.log("setImmediate 1"));
+        setTimeout(() => console.log("setTimeout 1"), 0);
+        fs.readFile('./test-file.txt', ()=>{
+            console.log('I/O finished')
+        })
+        console.log("console top-level code");
     // => code end 
 
 
