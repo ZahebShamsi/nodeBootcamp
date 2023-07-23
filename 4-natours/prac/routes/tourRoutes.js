@@ -3,7 +3,8 @@ const tourController = require('./../controllers/tourController');
 
 const router = express.Router();
 
-router.param('id', tourController.checkId); //custom middleware
+// router.param('id', tourController.checkId); //custom middleware
+      // checkId isn't needed because mongoose create id automatically
 
 router
   .route('/')
