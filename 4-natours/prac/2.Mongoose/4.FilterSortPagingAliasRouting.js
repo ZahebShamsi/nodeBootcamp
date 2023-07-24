@@ -27,6 +27,13 @@ exports.checkBody = (req, res, next) => {
     next();
   };
 
+  exports.aliasTopTours = (req, res, next) => { // prefills the request param even if user hasn't filled the query params
+    req.query.limit = '5'
+    req.query.sort = '-ratingsAverage, price'
+    req.query.fields = 'name, price, ratingsAverage, summary, difficulty'
+    next();
+}
+
 exports.getAllTours = async (req,res) => {
     const queryObj = {...req.params};
     //#region filter

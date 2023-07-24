@@ -7,6 +7,10 @@ const router = express.Router();
       // checkId isn't needed because mongoose create id automatically
 
 router
+  .route('/top-5-cheap')
+  .get(tourController.aliasTopTours, tourController.getAllTours);
+
+router
   .route('/')
   .get(tourController.getAllTours)
   .post(tourController.checkBody, tourController.createTour); // chaining multiple handler
