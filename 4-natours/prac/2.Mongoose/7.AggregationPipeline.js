@@ -1,6 +1,12 @@
+
+
+// from tourRoutes
+// router.route('/tour-stats').get(tourController.getTourStats);
+
 const Tour = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
 
+//#region Using ApiFeatures
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingsAverage,price';
@@ -111,6 +117,11 @@ exports.deleteTour = async (req, res) => {
   }
 };
 
+//#endregion
+
+
+//#region Aggregate controllers
+
 exports.getTourStats = async (req, res) => {
   try {
     const stats = await Tour.aggregate([
@@ -157,7 +168,8 @@ exports.getMonthlyPlan = async (req, res) => {
 
     const plan = await Tour.aggregate([
       {
-        $unwind: '$startDates'
+        $unwind: '$startDates'  
+        // startDates array to string , if 3 startDates elements in a documents then it will break into 3 documents
       },
       {
         $match: {
@@ -170,23 +182,23 @@ exports.getMonthlyPlan = async (req, res) => {
       {
         $group: {
           _id: { $month: '$startDates' },
-          numTourStarts: { $sum: 1 },
-          tours: { $push: '$name' }
+          numTourStarts: { $sum: 1 }, // count 1 for each document
+          tours: { $push: '$name' } // return array
         }
       },
       {
-        $addFields: { month: '$_id' }
+        $addFields: { month: '$_id' } // count
       },
       {
         $project: {
-          _id: 0
+          _id: 0 // don't send in return statement
         }
       },
       {
-        $sort: { numTourStarts: -1 }
+        $sort: { numTourStarts: -1 } // descending order
       },
       {
-        $limit: 12
+        $limit: 12 // max 12 months (max count)
       }
     ]);
 
@@ -203,3 +215,5 @@ exports.getMonthlyPlan = async (req, res) => {
     });
   }
 };
+
+//#endregion

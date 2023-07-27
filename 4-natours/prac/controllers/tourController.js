@@ -1,5 +1,6 @@
 const fs = require('fs');
 const Tour = require('../models/tourModel')
+const APIFeatures = require('./../utils/apiFeatures');
 
 //#region middleware
 
@@ -111,10 +112,19 @@ exports.getAllTours = async (req,res) => {
             //     if(skip >= numTours){ throw new Error('This page does not exist')}
             // }
 
+            // const tours = await Tour.find();
     //#endregion
 
+    // const tours = await Tour.find();
 
-    const tours = await Tour.find();
+    const features = new APIFeatures(Tour.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+    const tours = await features.query;
+
+    
     try{
         res.status(200).json({
             'status' : 'success',
@@ -214,3 +224,100 @@ exports.deleteTour = async (req,res) => {
         })
     }
 }
+
+//#region Aggregate controllers
+exports.getTourStats = async (req, res) => {
+    try {
+      const stats = await Tour.aggregate([
+        {
+          $match: { ratingsAverage: { $gte: 4.5 } }
+        },
+        {
+          $group: {
+            _id: { $toUpper: '$difficulty' }, // null if we want to group all data 
+            numTours: { $sum: 1 },
+            numRatings: { $sum: '$ratingsQuantity' },
+            avgRating: { $avg: '$ratingsAverage' },
+            avgPrice: { $avg: '$price' },
+            minPrice: { $min: '$price' },
+            maxPrice: { $max: '$price' }
+          }
+        },
+        {
+          $sort: { avgPrice: 1 }
+        }
+        // we can also chain the aggregation pipeline
+        // {
+        //   $match: { _id: { $ne: 'EASY' } }
+        // }
+      ]);
+  
+      res.status(200).json({
+        status: 'success',
+        data: {
+          stats
+        }
+      });
+    } catch (err) {
+      res.status(404).json({
+        status: 'fail',
+        message: err
+      });
+    }
+  };
+  
+  exports.getMonthlyPlan = async (req, res) => {
+    try {
+      const year = req.params.year * 1; // 2021
+  
+      const plan = await Tour.aggregate([
+        {
+          $unwind: '$startDates'  
+          // startDates array to string , if 3 startDates elements in a documents then it will break into 3 documents
+        },
+        {
+          $match: {
+            startDates: {
+              $gte: new Date(`${year}-01-01`),
+              $lte: new Date(`${year}-12-31`)
+            }
+          }
+        },
+        {
+          $group: {
+            _id: { $month: '$startDates' },
+            numTourStarts: { $sum: 1 }, // count 1 for each document
+            tours: { $push: '$name' } // return array
+          }
+        },
+        // {
+        //   $addFields: { month: '$_id' } // count
+        // },
+        // {
+        //   $project: {
+        //     _id: 0 // don't send in return statement
+        //   }
+        // },
+        // {
+        //   $sort: { numTourStarts: -1 } // descending order
+        // },
+        // {
+        //   $limit: 12 // max 12 months (max count)
+        // }
+      ]);
+  
+      res.status(200).json({
+        status: 'success',
+        data: {
+          plan
+        }
+      });
+    } catch (err) {
+      res.status(404).json({
+        status: 'fail',
+        message: err
+      });
+    }
+  };
+
+//#endregion
