@@ -74,6 +74,8 @@ const tourSchema = new mongoose.Schema(
       select: false
     },
     startDates: [Date],
+
+    // queryMiddleware
     secretTour: {
       type: Boolean,
       default: false
@@ -89,27 +91,31 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
-// DOCUMENT MIDDLEWARE: runs before .save() and .create()
-tourSchema.pre('save', function(next) {
-  this.slug = slugify(this.name, { lower: true });
-  next();
-});
+//#region DOCUMENT MIDDLEWARE: runs before .save() and .create() and not findByIdAndUpdate
+ 
+  tourSchema.pre('save', function(next) {
+    // this points to current document
+    this.slug = slugify(this.name, { lower: true });
+    next();
+  });
 
-// tourSchema.pre('save', function(next) {
-//   console.log('Will save document...');
-//   next();
-// });
+  // tourSchema.pre('save', function(next) {
+  //   console.log('Will save document...');
+  //   next();
+  // });
 
-// tourSchema.post('save', function(doc, next) {
-//   console.log(doc);
-//   next();
-// });
+  // tourSchema.post('save', function(doc, next) {
+  //   console.log(doc);
+  //   next();
+  // });
+//#endregion
 
-// QUERY MIDDLEWARE
-// tourSchema.pre('find', function(next) {
-tourSchema.pre(/^find/, function(next) {
+
+// #region QUERY MIDDLEWARE
+// tourSchema.pre('find', function(next) { // works only for find and not findById or findOne
+tourSchema.pre(/^find/, function(next) { // works only for all find operations
+  // this points to current query
   this.find({ secretTour: { $ne: true } });
-
   this.start = Date.now();
   next();
 });
@@ -118,14 +124,20 @@ tourSchema.post(/^find/, function(docs, next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds!`);
   next();
 });
+//#endregion
 
-// AGGREGATION MIDDLEWARE
+// #region AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function(next) {
+  // this points to current aggregation object
+  // to remove secretTour from aggregate stats we have added pre hook before aggregation
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
 
   console.log(this.pipeline());
   next();
 });
+//#endregion
+
+// MODEL MIDDLEWARE will be covered in authentication
 
 const Tour = mongoose.model('Tour', tourSchema);
 
