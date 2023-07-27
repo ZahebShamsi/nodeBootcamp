@@ -190,7 +190,7 @@ exports.updateTour = async (req,res) => {
             req.params.id, 
             req.body , 
             {   new : true, // returns updated object
-                runValidators : true
+                runValidators : true // to runValidator mentioned in properties in tour model
             }
         )
 

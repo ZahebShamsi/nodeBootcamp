@@ -54,7 +54,6 @@ const slugify = require('slugify');
             // this only points to current doc on NEW document creation
             return val < this.price;
           },
-        // {VALUE} is mongo property that contains value of property(priceDiscount) in current document
           message: 'Discount price ({VALUE}) should be below regular price'
         }
       },
