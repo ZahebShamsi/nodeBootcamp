@@ -1,3 +1,9 @@
+// occurs when code is breaking
+
+
+// async error like DB password error -chnages in server.js
+
+
 const dotenv = require('dotenv');
 const app = require('./app');
 const mongoose = require('mongoose');
@@ -36,3 +42,4 @@ process.on('unhandledRejection', err => {
     process.exit(1);
   });
 });
+
