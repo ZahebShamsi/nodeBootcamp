@@ -7,7 +7,7 @@ const AppError = require('./utils/appError');
 
 const app = express();
 
-// 1) MIDDLEWARES
+//#region 1) MIDDLEWARES
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -24,11 +24,12 @@ app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   next();
 });
+//#endregion
 
-// 3) ROUTES
+// #region 2) ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
-
+//#endregion
 
 //#region Route Error handling
   // middleware reached here, means the requested route is not listed above.
@@ -55,7 +56,7 @@ app.use('/api/v1/users', userRouter);
 //#endregion
 
 
-//#region Global Error Handler
+//#region 3) Global Error Handler
 
 app.use((err, req, res, next) => {
   err.statusCode = err.statusCode || '500';
