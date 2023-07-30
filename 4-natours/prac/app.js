@@ -3,6 +3,7 @@ const morgan = require('morgan');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const AppError = require('./utils/appError');
 
 const app = express();
 
@@ -34,17 +35,23 @@ app.use('/api/v1/users', userRouter);
   // .all means all types of api methods (get/post/patch/delete etc)
   app.all('*').use((req, res, next) => {
 
-    res.status(404).json({
-      status : 'fail',
-      message : `Cant find ${req.originalUrl} route`
-    })
+    // basic route error handling
+    // res.status(404).json({
+    //   status : 'fail',
+    //   message : `Cant find ${req.originalUrl} route`
+    // })
+  
+
+  // b)error middleware
+  // const err = new Error(`Cant find ${req.originalUrl} route`);
+  // err.statusCode = 404;
+  // err.status = 'fail'
+  // next(err) //pass param in next() means middleware will skip all middlewares and skip to the error middleware
+
+  // c) from common new Apperror class
+   next(new AppError(`Cant find ${req.originalUrl} route`)) // 
+
   })
-
-  const err = new Error(`Cant find ${req.originalUrl} route`);
-  err.statusCode = 404;
-  err.status = 'fail'
-
-  next(err) //pass param in next() means middleware will skip all middlewares and skip to the error middleware
 //#endregion
 
 
