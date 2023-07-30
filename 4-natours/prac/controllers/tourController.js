@@ -2,6 +2,7 @@ const fs = require('fs');
 const Tour = require('../models/tourModel')
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchError');
+const AppError = require('./../utils/appError')
 
 //#region middleware
 
@@ -36,7 +37,7 @@ exports.aliasTopTours = (req, res, next) => { // prefills the request param even
     next();
 }
 
-exports.getAllTours = catchAsync(async (req,res) => {
+exports.getAllTours = catchAsync(async (req,res, next) => {
     const queryObj = {...req.params};
     //#region filter
         // Type 1
@@ -134,7 +135,7 @@ exports.getAllTours = catchAsync(async (req,res) => {
 
 })
 
-exports.createTour = catchAsync(async (req,res) => {
+exports.createTour = catchAsync(async (req,res, next) => {
 
     // old method
         // const tour = new Tour({}); 
@@ -149,7 +150,7 @@ exports.createTour = catchAsync(async (req,res) => {
 
 })
 
-exports.getTourById = catchAsync(async (req,res) => {
+exports.getTourById = catchAsync(async (req,res, next) => {
 
     // old
         // const id = req.params.id * 1;
@@ -157,6 +158,11 @@ exports.getTourById = catchAsync(async (req,res) => {
 
     // new
     const tours = await Tour.findById(req.params.id);  // Tour.findOne{_id : req.params.id}
+
+  if(!tours){
+    return next(new AppError('No tour found with this Id' , 404)) // 
+  }
+
             res.status(200).json({
                 'status' : 'success',
                 data : { tours }
@@ -164,7 +170,7 @@ exports.getTourById = catchAsync(async (req,res) => {
 
 })
 
-exports.updateTour = catchAsync(async (req,res) => {
+exports.updateTour = catchAsync(async (req,res, next) => {
         const tour = await Tour.findByIdAndUpdate(
             req.params.id, 
             req.body , 
@@ -172,14 +178,16 @@ exports.updateTour = catchAsync(async (req,res) => {
                 runValidators : true // to runValidator mentioned in properties in tour model
             }
         )
-
+        if(!tour){
+          return next(new AppError('No tour found with this Id' , 404)) // 
+        }
         res.status(200).json({
             'status' : 'success',
             data : {tour}
         })
 })
 
-exports.deleteTour = catchAsync(async (req,res) => {
+exports.deleteTour = catchAsync(async (req,res, next) => {
         const tour = await Tour.findByIdAndDelete(
             req.params.id, 
         )
@@ -190,7 +198,7 @@ exports.deleteTour = catchAsync(async (req,res) => {
 })
 
 //#region Aggregate controllers
-exports.getTourStats = catchAsync(async (req, res) => {
+exports.getTourStats = catchAsync(async (req, res, next) => {
       const stats = await Tour.aggregate([
         {
           $match: { ratingsAverage: { $gte: 4.5 } }
@@ -224,7 +232,7 @@ exports.getTourStats = catchAsync(async (req, res) => {
 
   });
   
-  exports.getMonthlyPlan = catchAsync(async (req, res) => {
+  exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
       const year = req.params.year * 1; // 2021
   
       const plan = await Tour.aggregate([
